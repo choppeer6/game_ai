@@ -1,0 +1,12 @@
+**/target/
+**/node_modules/
+**/dist/
+**/.venv/
+**/__pycache__/
+*.pyc
+.idea/
+*.iml
+uploads/
+.env
+.DS_Store
+*.tsbuildinfo
