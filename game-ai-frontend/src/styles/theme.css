@@ -1,0 +1,36 @@
+:root {
+  --bg: #0f1419;
+  --panel: #1a2332;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #00d4aa;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.el-card {
+  background: var(--panel) !important;
+  border-color: #2d3a4f !important;
+  color: var(--text) !important;
+}
+
+.el-table {
+  --el-table-bg-color: var(--panel);
+  --el-table-tr-bg-color: var(--panel);
+  --el-table-header-bg-color: #141c26;
+  --el-table-text-color: var(--text);
+  --el-table-border-color: #2d3a4f;
+}
+
+.el-input__wrapper,
+.el-textarea__inner {
+  background: #141c26 !important;
+}
