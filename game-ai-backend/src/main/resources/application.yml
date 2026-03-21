@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: game-ai-backend
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+  datasource:
+    url: jdbc:mysql://localhost:3306/game_ai_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+gameai:
+  upload-dir: ${GAMEAI_UPLOAD_DIR:uploads}
+  python:
+    base-url: ${PYTHON_ENGINE_URL:http://127.0.0.1:8000}
+  jwt:
+    secret: ${JWT_SECRET:game-ai-dev-secret-key-change-in-production-min-32-chars!!}
+    expire-ms: 86400000
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.nuaa.gameai: INFO
