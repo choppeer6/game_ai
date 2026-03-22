@@ -48,24 +48,50 @@ public class DataInitializer implements CommandLineRunner {
             sysUserMapper.insert(u2);
         }
 
-        Long sc = sceneConfigMapper.selectCount(new LambdaQueryWrapper<>());
-        if (sc == null || sc == 0) {
+        insertSceneIfAbsent("演示-无人机集群对抗（大图）", 32, 32, 3, 3,
+                "{\"win_condition\":{\"type\":\"eliminate\",\"max_steps\":300},\"obstacles\":[],\"params\":{\"speed\":1,\"sensor_radius\":5}}");
+        insertSceneIfAbsent("快速训练场景（8×8）", 8, 8, 2, 2,
+                "{\"win_condition\":{\"type\":\"eliminate\",\"max_steps\":100},\"obstacles\":[],\"params\":{\"speed\":1,\"sensor_radius\":5}}");
+        insertSceneIfAbsent("中型对抗场景（12×12）", 12, 12, 3, 3,
+                "{\"win_condition\":{\"type\":\"eliminate\",\"max_steps\":200},\"obstacles\":[[3,3],[3,8],[8,3],[8,8]],\"params\":{\"speed\":1,\"sensor_radius\":5}}");
+
+        insertAlgoIfAbsent("快速验证 IPPO",  "IPPO",
+                "{\"learning_rate\":0.001,\"discount_factor\":0.99,\"max_epochs\":100,"
+                + "\"rollout_episodes\":10,\"ppo_epochs\":4,\"clip_coef\":0.2,"
+                + "\"vf_coef\":0.5,\"ent_coef\":0.05,\"max_grad_norm\":0.5}");
+        insertAlgoIfAbsent("标准训练 IPPO",  "IPPO",
+                "{\"learning_rate\":0.001,\"discount_factor\":0.99,\"max_epochs\":500,"
+                + "\"rollout_episodes\":20,\"ppo_epochs\":6,\"clip_coef\":0.2,"
+                + "\"vf_coef\":0.5,\"ent_coef\":0.05,\"max_grad_norm\":0.5}");
+        insertAlgoIfAbsent("高质量训练 IPPO", "IPPO",
+                "{\"learning_rate\":0.0005,\"discount_factor\":0.99,\"max_epochs\":1000,"
+                + "\"rollout_episodes\":30,\"ppo_epochs\":8,\"clip_coef\":0.15,"
+                + "\"vf_coef\":0.5,\"ent_coef\":0.02,\"max_grad_norm\":0.5}");
+    }
+
+    private void insertSceneIfAbsent(String name, int w, int h, int red, int blue, String json) {
+        Long cnt = sceneConfigMapper.selectCount(
+                new LambdaQueryWrapper<SceneConfig>().eq(SceneConfig::getSceneName, name));
+        if (cnt == null || cnt == 0) {
             SceneConfig s = new SceneConfig();
-            s.setSceneName("演示-无人机集群对抗");
-            s.setMapWidth(32);
-            s.setMapHeight(32);
-            s.setRedDroneCount(3);
-            s.setBlueDroneCount(3);
-            s.setSceneJson("{\"win_condition\":{\"type\":\"eliminate\"},\"obstacles\":[],\"params\":{\"speed\":1,\"sensor_radius\":5}}");
+            s.setSceneName(name);
+            s.setMapWidth(w);
+            s.setMapHeight(h);
+            s.setRedDroneCount(red);
+            s.setBlueDroneCount(blue);
+            s.setSceneJson(json);
             sceneConfigMapper.insert(s);
         }
+    }
 
-        Long ac = algorithmConfigMapper.selectCount(new LambdaQueryWrapper<>());
-        if (ac == null || ac == 0) {
+    private void insertAlgoIfAbsent(String templateName, String algoName, String hyperParameters) {
+        Long cnt = algorithmConfigMapper.selectCount(
+                new LambdaQueryWrapper<AlgorithmConfig>().eq(AlgorithmConfig::getTemplateName, templateName));
+        if (cnt == null || cnt == 0) {
             AlgorithmConfig a = new AlgorithmConfig();
-            a.setTemplateName("默认 MAPPO");
-            a.setAlgoName("MAPPO");
-            a.setHyperParameters("{\"learning_rate\":0.0003,\"discount_factor\":0.99,\"max_epochs\":20,\"rollout_episodes\":4,\"ppo_epochs\":2,\"clip_coef\":0.2}");
+            a.setTemplateName(templateName);
+            a.setAlgoName(algoName);
+            a.setHyperParameters(hyperParameters);
             algorithmConfigMapper.insert(a);
         }
     }

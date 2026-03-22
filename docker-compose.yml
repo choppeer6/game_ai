@@ -1,0 +1,93 @@
+# 博弈智能体训练 — 一键编排（合理端口见 doc/DEPLOY.md）
+# 使用：在项目根目录执行  docker compose up -d --build
+# 浏览器访问：http://localhost:3000
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: game-ai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: game_ai_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./game-ai-backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: game-ai-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  engine:
+    build:
+      context: ./game-ai-engine
+      dockerfile: Dockerfile
+    container_name: game-ai-engine
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CHECKPOINT_DIR: /app/checkpoints
+    volumes:
+      - engine_checkpoints:/app/checkpoints
+    depends_on:
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  backend:
+    build:
+      context: ./game-ai-backend
+      dockerfile: Dockerfile
+    container_name: game-ai-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/game_ai_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PYTHON_ENGINE_URL: http://engine:8000
+      GAMEAI_UPLOAD_DIR: /app/uploads
+    volumes:
+      - backend_uploads:/app/uploads
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      engine:
+        condition: service_started
+
+  web:
+    build:
+      context: ./game-ai-frontend
+      dockerfile: Dockerfile
+    container_name: game-ai-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  engine_checkpoints:
+  backend_uploads:

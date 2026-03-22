@@ -1,8 +1,10 @@
 # 验收演示脚本（建议顺序）
 
-1. 启动 MySQL、Redis，导入 [schema.sql](../game-ai-backend/src/main/resources/schema.sql)；如需升级已有库，执行 [schema_migration_20260321.sql](../game-ai-backend/src/main/resources/schema_migration_20260321.sql)。
-2. 启动 `game-ai-engine`（8000）、`game-ai-backend`（8080）、`game-ai-frontend`（5173）。
-3. 浏览器打开 `http://localhost:5173`，使用 **admin / admin123** 登录（或 **commander / commander123** 仅演示指挥/对比）。
+> **Docker 一键启动：** 根目录执行 `docker compose up -d --build`，访问 `http://localhost:3000`；端口与排障见 [DEPLOY.md](./DEPLOY.md)。
+
+1. **本地开发时** 启动 MySQL、Redis，导入 [schema.sql](../game-ai-backend/src/main/resources/schema.sql)；如需升级已有库，执行 [schema_migration_20260321.sql](../game-ai-backend/src/main/resources/schema_migration_20260321.sql)。
+2. 启动 `game-ai-engine`（8000）、`game-ai-backend`（8080）、`game-ai-frontend`（5173）。（使用 Docker 时由 Compose 统一拉起，无需逐服务手动启。）
+3. 浏览器打开 `http://localhost:5173`（本地开发）或 `http://localhost:3000`（Docker），使用 **admin / admin123** 登录（或 **commander / commander123** 仅演示指挥/对比）。
 4. **场景配置**：查看或新建场景，在扩展 JSON 中配置 `obstacles`、`win_condition.max_steps`，观察二维预览网格。
 5. **算法模板**：确认 MAPPO 模板及超参（含 `rollout_episodes`、`ppo_epochs`）。
 6. **数据接入**：上传 CSV/JSON，或使用 `POST /api/datasets/ingest`（需 ENGINEER/ADMIN 角色）写入样本数据。

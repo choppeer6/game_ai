@@ -117,10 +117,31 @@ class GridWarParallelEnv:
                 return aid
         return None
 
+    def _min_enemy_dist(self, aid: str) -> float:
+        """返回 aid 到最近存活敌方的曼哈顿距离，无敌方时返回 inf。"""
+        team = self._team[aid]
+        r0, c0 = self._pos[aid]
+        best = float("inf")
+        for other in self.agent_ids:
+            if self._team[other] == team or not self._alive.get(other, False):
+                continue
+            r1, c1 = self._pos[other]
+            d = abs(r1 - r0) + abs(c1 - c0)
+            if d < best:
+                best = d
+        return best
+
     def step(self, actions: Dict[str, int]) -> Tuple[Dict[str, np.ndarray], Dict[str, float], Dict[str, bool], Dict[str, Any]]:
         """actions: agent_id -> 0..4"""
         rewards = {aid: 0.0 for aid in self.agent_ids}
         self._step_count += 1
+
+        # 移动前记录各智能体到最近敌方的距离，用于 reward shaping
+        pre_dist: Dict[str, float] = {
+            aid: self._min_enemy_dist(aid)
+            for aid in self.agent_ids
+            if self._alive.get(aid, False)
+        }
 
         drdc = [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]
         new_pos: Dict[str, Tuple[int, int]] = {}
@@ -158,6 +179,19 @@ class GridWarParallelEnv:
                 continue
             self._pos[aid] = final_pos[aid]
 
+        # Reward shaping：鼓励智能体主动靠近敌方，抑制逃跑
+        _APPROACH_BONUS = 0.02
+        _RETREAT_PENALTY = 0.01
+        for aid in self.agent_ids:
+            if not self._alive.get(aid, False):
+                continue
+            post_d = self._min_enemy_dist(aid)
+            pre_d = pre_dist.get(aid, float("inf"))
+            if post_d < pre_d:
+                rewards[aid] += _APPROACH_BONUS
+            elif post_d > pre_d:
+                rewards[aid] -= _RETREAT_PENALTY
+
         # 同格交战：不同队伍同格则双方随机阵亡一方
         cell_map: Dict[Tuple[int, int], List[str]] = {}
         for aid in self.agent_ids:
@@ -192,7 +226,7 @@ class GridWarParallelEnv:
 
         red_alive = sum(1 for a in self.agent_ids if self._team[a] == "red" and self._alive[a])
         blue_alive = sum(1 for a in self.agent_ids if self._team[a] == "blue" and self._alive[a])
-        step_penalty = -0.01
+        step_penalty = -0.003
         for aid in self.agent_ids:
             if self._alive[aid]:
                 rewards[aid] += step_penalty

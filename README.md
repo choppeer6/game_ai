@@ -27,10 +27,17 @@
 浏览器访问：<http://localhost:5173>  
 默认账号：`admin` / `admin123`；指挥只读：`commander` / `commander123`。
 
+## Docker 部署
+
+在项目根目录执行 `docker compose up -d --build`，浏览器访问 **<http://localhost:3000>**（Nginx 反代 API/WebSocket）。  
+端口说明、数据卷与故障排查见 [doc/DEPLOY.md](doc/DEPLOY.md)。
+
 ## 文档
 
+- Docker 部署：[doc/DEPLOY.md](doc/DEPLOY.md)
 - 演示脚本：[doc/DEMO_SCRIPT.md](doc/DEMO_SCRIPT.md)
 - 性能自测：[doc/PERFORMANCE.md](doc/PERFORMANCE.md)
+- 开发手册：[doc/开发手册.md](doc/开发手册.md)
 
 ## 能力摘要
 
@@ -46,3 +53,6 @@
 | `game-ai-engine` | 训练、推理、评估 API |
 | `game-ai-frontend` | Vue3 + Vite + Element Plus |
 | `doc` | 需求与演示文档 |
+
+## 软件示例
+![界面演示](./docs/images/show.png)

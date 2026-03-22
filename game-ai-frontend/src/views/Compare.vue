@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as echarts from 'echarts'
 import http from '../api/http'
 
@@ -65,16 +65,23 @@ async function exportHtml() {
   URL.revokeObjectURL(url)
 }
 
+function onResize() { chart?.resize() }
+
 onMounted(async () => {
   await refreshTaskIds()
+  window.addEventListener('resize', onResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  chart?.dispose()
+  chart = null
 })
 
 watch(
   () => chartEl.value,
   (el) => {
-    if (el && !chart) {
-      chart = echarts.init(el)
-    }
+    if (el && !chart) chart = echarts.init(el)
   }
 )
 </script>

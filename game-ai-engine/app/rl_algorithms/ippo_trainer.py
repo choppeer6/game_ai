@@ -168,7 +168,8 @@ class IPPOTrainer:
                 log_prob, entropy, values = policy.evaluate(ob, ac)
                 ratio = torch.exp(log_prob - old_lp)
                 adv = rt - values.detach()
-                adv = (adv - adv.mean()) / (adv.std() + 1e-8)
+                # unbiased=True 在 batch 仅 1 条时自由度为 0，会触发 PyTorch UserWarning
+                adv = (adv - adv.mean()) / (adv.std(unbiased=False) + 1e-8)
                 surr1 = ratio * adv
                 surr2 = torch.clamp(ratio, 1.0 - self.clip_coef, 1.0 + self.clip_coef) * adv
                 pi_loss = -torch.min(surr1, surr2).mean()
